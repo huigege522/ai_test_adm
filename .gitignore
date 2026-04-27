@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+reports/*.html
+reports/allure-results/
+.DS_Store
