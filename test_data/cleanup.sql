@@ -1,19 +1,34 @@
 -- ============================================================
 -- cleanup.sql — 测试数据清理
+-- 表：cmp_apple_market（苹果大盘数据表）
+-- 生成日期：2026-05-06
 -- 说明：
 --   1. 按主键精确删除，不使用 TRUNCATE（避免影响非测试数据）
---   2. 删除顺序与 baseline.sql 插入顺序相反（先删从表，再删主表）
---   3. 本文件由 conftest.py 中 load_baseline fixture 自动执行
+--   2. 删除顺序与 baseline.sql 插入顺序一致（单表无外键依赖）
+--   3. 覆盖 ID 范围：900001 ~ 900032
+--   4. 本文件由 conftest.py 中 load_baseline fixture 自动执行
 -- ============================================================
 
--- ─────────────────────────────────────────────
--- 示例：清理 users 表测试数据
--- 与 baseline.sql 中的 INSERT 对应，按主键删除
--- ─────────────────────────────────────────────
+-- ── 基准数据（900001-900005） ────────────────────────────────
+DELETE FROM cmp_apple_market WHERE id IN (900001, 900002, 900003, 900004, 900005);
 
-DELETE FROM users WHERE id IN (9001, 9002, 9003, 9004, 9005);
+-- ── 边界值：category VARCHAR(50)（900011-900013） ────────────
+DELETE FROM cmp_apple_market WHERE id IN (900011, 900012, 900013);
 
--- ─────────────────────────────────────────────
--- 批量清理所有 test_ 前缀数据（备用，谨慎使用）
--- DELETE FROM users WHERE username LIKE 'test_%';
--- ─────────────────────────────────────────────
+-- ── 边界值：marketplace VARCHAR(100)（900014-900016） ─────────
+DELETE FROM cmp_apple_market WHERE id IN (900014, 900015, 900016);
+
+-- ── 边界值：country_code VARCHAR(15)（900017-900019） ─────────
+DELETE FROM cmp_apple_market WHERE id IN (900017, 900018, 900019);
+
+-- ── 边界值：DECIMAL(10,5) 最小/最大值（900020-900021） ───────
+DELETE FROM cmp_apple_market WHERE id IN (900020, 900021);
+
+-- ── 边界值：time_period 历史/当天/未来（900022-900024） ───────
+DELETE FROM cmp_apple_market WHERE id IN (900022, 900023, 900024);
+
+-- ── 特殊状态（900025-900032） ────────────────────────────────
+DELETE FROM cmp_apple_market WHERE id IN (900025, 900026, 900027, 900028, 900029, 900030, 900031, 900032);
+
+-- ── 兜底清理：批量删除全部测试 ID 范围（上面逐行失败时备用） ──
+-- DELETE FROM cmp_apple_market WHERE id BETWEEN 900001 AND 900099;
