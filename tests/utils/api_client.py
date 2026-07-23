@@ -24,10 +24,13 @@ logger = logging.getLogger(__name__)
 
 class ApiClient:
     def __init__(self, base_url: str = None, token: str = None, timeout: int = None):
-        self.base_url = (base_url or os.getenv("BASE_URL", "http://localhost:8080")).rstrip("/")
+        self.base_url = (base_url or os.getenv("BASE_URL", "https://adm.gm825.net")).rstrip("/")
         self.timeout = timeout or int(os.getenv("REQUEST_TIMEOUT", 10))
         self.session = requests.Session()
-        self.session.headers.update({"Content-Type": "application/json"})
+        self.session.headers.update({
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        })
 
         _token = token or os.getenv("AUTH_TOKEN", "")
         if _token:

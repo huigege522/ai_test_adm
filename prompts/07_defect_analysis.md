@@ -1,7 +1,9 @@
-# 阶段五：缺陷分析 & 回归建议
+# 阶段六：缺陷分析 & 回归建议
+
+**全景位置**：[00_README.md](00_README.md)。本阶段在 **执行 pytest（含 API 与 `-m e2e`）** 之后使用，承接各阶段产出。
 
 **使用场景**：
-  A. 测试失败时，快速定位根因
+  A. 测试失败时，快速定位根因（含 **API** 与 **Playwright E2E**）
   B. 需求/接口变更时，识别影响范围，生成回归建议
 
 ---
@@ -17,8 +19,8 @@
 ==== 接口定义 ====
 @[Apifox 接口文档 或 粘贴接口定义]
 
-==== 相关代码 ====
-@[Controller 文件]  @[Service 文件]
+==== 相关代码 / 用例 ====
+@[Controller 文件]  @[Service 文件]  @[tests/api/{模块}/test_xxx.py]  @[tests/integration/{模块}/test_*_e2e.py（若为 UI 失败）]
 
 ==== 数据库表结构 ====
 [粘贴相关 CREATE TABLE]
@@ -46,7 +48,7 @@ Apifox 中以下接口发生了变更，请分析测试用例的影响范围：
 - 原 email 参数改为非必填
 
 ==== 现有测试文件 ====
-@[tests/api/test_user.py]  @[tests/integration/test_flow_example.py]
+@[tests/api/{模块}/test_user.py]  @[tests/integration/_examples/test_flow_example.py]  @[tests/integration/{模块}/test_*_e2e.py]
 
 ==== 请输出 ====
 1. 【需修改的用例】列出文件名 + 函数名 + 需修改原因

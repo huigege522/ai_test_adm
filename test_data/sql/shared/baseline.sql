@@ -2,6 +2,12 @@
 -- baseline.sql — 基准测试数据
 -- 表：cmp_apple_market（苹果大盘数据表）
 -- 生成日期：2026-05-06
+--
+-- 【执行目标库 — MySQL 测试库】
+--   - 与 pytest db_conn / load_baseline 一致：见 .env 中 DB_HOST / DB_NAME（DB_*）。
+--   - 业务上另有部分表在 PolarDB；本文件不包含 PolarDB 表（扩展表见 basic_info/baseline.sql）。
+--   - 脚本内不写 USE：请在客户端选中 DB_NAME 对应库后再执行。
+--
 -- 说明：
 --   1. 测试数据 ID 范围：900001 ~ 900035，不与生产数据冲突
 --   2. 字符串显示字段（ttr/cpt/cr/cpa）模拟真实区间格式

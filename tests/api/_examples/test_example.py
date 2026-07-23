@@ -5,7 +5,7 @@ API 接口测试示例 — 以"用户模块"为参考模板。
   1. 复制本文件，将文件名替换为实际模块名，如 test_order.py
   2. 将 ENDPOINT 替换为 Apifox 中对应的接口路径
   3. 使用阶段二 Prompt（prompts/02_apifox_to_cases.md）让 AI 补充完整用例
-  4. 运行：pytest tests/api/test_example.py -v
+  4. 运行：pytest tests/api/_examples/test_example.py -v
 """
 import pytest
 from tests.utils.api_client import ApiClient
@@ -77,7 +77,7 @@ class TestUserCreate:
         ({"username": "", "password": "Test@123456", "email": "a@b.com"}, "username 为空字符串"),
         ({"username": "a" * 256, "password": "Test@123456", "email": "a@b.com"}, "username 超长"),
     ])
-    def test_必填/格式校验(self, payload, desc):
+    def test_必填与格式校验(self, payload, desc):
         resp = client.post("/api/user/create", json=payload)
         assert resp.status_code in (400, 422), f"场景【{desc}】期望 4xx，实际 {resp.status_code}"
 

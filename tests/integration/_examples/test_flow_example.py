@@ -5,7 +5,7 @@
   1. 复制本文件，将文件名替换为实际业务流程，如 test_order_flow.py
   2. 使用阶段一 Prompt（prompts/01_req_to_testpoints.md）提取业务流程步骤
   3. 让 AI 按业务流程补充断言
-  4. 运行：pytest tests/integration/test_flow_example.py -v
+  4. 运行：pytest tests/integration/_examples/test_flow_example.py -v
 """
 import pytest
 from tests.utils.api_client import ApiClient

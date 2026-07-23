@@ -2,6 +2,10 @@
 -- cleanup.sql — 测试数据清理
 -- 表：cmp_apple_market（苹果大盘数据表）
 -- 生成日期：2026-05-06
+--
+-- 【执行目标库 — MySQL 测试库】
+--   - 与 baseline.sql、conftest load_baseline 一致：在 .env 的 DB_* MySQL 测试库执行。
+--
 -- 说明：
 --   1. 按主键精确删除，不使用 TRUNCATE（避免影响非测试数据）
 --   2. 删除顺序与 baseline.sql 插入顺序一致（单表无外键依赖）

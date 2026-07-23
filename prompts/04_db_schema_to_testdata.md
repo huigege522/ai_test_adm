@@ -1,5 +1,7 @@
 # 阶段三：MySQL Schema → 测试数据构造
 
+**全景位置**：[00_README.md](00_README.md)。本阶段数据可同时服务 **阶段二～四的 API 用例** 与 **阶段五 UI E2E**（例如固定账号、列表必有数据）；纯 E2E 只读环境可跳过部分造数。
+
 **使用场景**：获取到数据库建表语句后，让 AI 生成可复用的测试数据 SQL。  
 **在 Cursor 中使用**：粘贴 CREATE TABLE 语句后使用 Prompt。
 
@@ -83,6 +85,8 @@ B. cleanup.sql —— 对应的 DELETE 语句（按主键精确删除，不用 T
 
 ## 输出产物
 
-- `test_data/baseline.sql`
-- `test_data/cleanup.sql`
+- `test_data/sql/{模块目录}/baseline.sql`
+- `test_data/sql/{模块目录}/cleanup.sql`（通用示例见 `shared/`）
 - 追加至 `tests/conftest.py`
+
+**阶段五（E2E）**：若用例依赖「列表非空、指定 ORG/产品存在」等，在本阶段 SQL 或 fixture 中写明前置数据，并在 [06_e2e_ui_flow.md](06_e2e_ui_flow.md) 的用例注释中引用对应数据标识，避免环境与用例脱节。

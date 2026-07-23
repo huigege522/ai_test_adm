@@ -5,4 +5,7 @@ __pycache__/
 .pytest_cache/
 reports/*.html
 reports/allure-results/
+reports/allure-report/
+reports/screenshots/
 .DS_Store
+.workbuddy/

@@ -1,0 +1,11 @@
+-- =============================================================================
+-- basic_info/notes.sql（可选参考，非 pytest 默认加载）
+-- =============================================================================
+-- BASIC_INFO_FLOW_* 自动化依赖 Polar / MySQL 侧存在：
+--   tb_apple_org.org_id = BASIC_INFO_FLOW_ORG_ID
+--   tb_apple_app.adam_id = BASIC_INFO_FLOW_ADAM_ID
+-- 且 apple_org_ext / apple_app_ext 中尚无对应占用（或软删可复活）。
+--
+-- 请勿在生产库执行随机 INSERT；建议在专用测试 Polar 实例由 DBA 准备两行基准数据，
+-- 或在本地迁移库执行 apple_cmp_api 中 migrations。
+-- =============================================================================

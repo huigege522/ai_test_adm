@@ -1,0 +1,77 @@
+// 示例：GitLab 拉代码 → 部署测试环境（你们已有步骤）→ 部署成功后跑自动化测试作门禁
+// 使用方式：复制到 Jenkins 流水线；仓库根目录即 ai_test_adm 工作区根时可直接使用。
+
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+        timestamps()
+    }
+
+    environment {
+        // 在「部署」stage 成功后写入当前测试环境地址（此处仅为示例默认值）
+        // 推荐：由 Deploy 步骤 setEnv('TEST_ENV_BASE_URL', '...')，本处改为 BASE_URL = "${env.TEST_ENV_BASE_URL}"
+        BASE_URL = "${env.TEST_ENV_BASE_URL ?: 'https://replace-with-deployed-url'}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        // ── 接你们现有「Jenkins 部署测试环境」逻辑 ─────────────────
+        stage('DeployTestEnv') {
+            steps {
+                echo 'TODO: 使用现有部署脚本/Job；结束后必须导出 TEST_ENV_BASE_URL 供下游使用'
+                // 示例： sh "echo https://feature-${env.BRANCH_NAME}.test.example.com > deployed_url.txt"
+                //       script { env.TEST_ENV_BASE_URL = readFile('deployed_url.txt').trim() }
+            }
+        }
+
+        stage('门禁_API_Smoke') {
+            steps {
+                sh 'python -m pip install -r requirements.txt'
+                // 择一：账密（与 conftest do_login 一致）或手动 AUTH_COOKIE
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'REPLACE_WITH_JENKINS_CREDENTIAL_ID',
+                        usernameVariable: 'LOGIN_USERNAME',
+                        passwordVariable: 'LOGIN_PASSWORD'
+                    )
+                ]) {
+                    sh """
+                        export BASE_URL='${env.TEST_ENV_BASE_URL ?: env.BASE_URL}'
+                        export LOGIN_USERNAME="\${LOGIN_USERNAME}"
+                        export LOGIN_PASSWORD="\${LOGIN_PASSWORD}"
+                        pytest tests/api/ -v -m smoke --junitxml=reports/junit-api-smoke.xml
+                    """
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'reports/junit-api-smoke.xml'
+                }
+            }
+        }
+
+        // 可选：E2E — agent 需支持 chromium；取消注释前请配置 Playwright 与对应凭证
+        // stage('门禁_UI_E2E') {
+        //     steps {
+        //         sh 'python -m pip install -r requirements.txt && playwright install chromium'
+        //         withCredentials([...]) {
+        //             sh 'export BASE_URL=... && pytest tests/integration/ -v -m e2e --junitxml=reports/junit-e2e.xml'
+        //         }
+        //     }
+        //     post { always { junit allowEmptyResults: true, testResults: 'reports/junit-e2e.xml' } }
+        // }
+    }
+
+    post {
+        failure {
+            echo '门禁失败：查看 JUnit 与控制台日志（pytest 非零退出会令流水线失败）'
+        }
+    }
+}
