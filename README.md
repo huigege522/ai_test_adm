@@ -1,6 +1,6 @@
 # AI 辅助测试框架 — ai_test_adm
 
-技术栈：**Cursor AI + Apifox + pytest + MySQL**
+技术栈：**Cursor AI + pytest + MySQL + Playwright（UI E2E）**
 
 ---
 
@@ -8,28 +8,33 @@
 
 ```
 ai_test_adm/
-├── prompts/                        # 五个阶段的 AI Prompt 模板（核心）
-│   ├── 01_req_to_testpoints.md     # 阶段一：需求文档 → 测试点提取
-│   ├── 02_apifox_to_cases.md       # 阶段二-A：Apifox → pytest 用例
-│   ├── 03_code_to_cases.md         # 阶段二-B：代码库 → 分支覆盖用例
-│   ├── 04_db_schema_to_testdata.md # 阶段三：MySQL Schema → 测试数据
-│   ├── 05_assert_generation.md     # 阶段四：断言生成 & 执行命令
-│   └── 06_defect_analysis.md       # 阶段五：缺陷分析 & 回归建议
+├── prompts/                         # AI Prompt 模板
+│   ├── main.md                     # 【主 Prompt】需求 → 用例一步到位
+│   ├── 03_code_to_cases.md         # 代码分支 → 补充用例（按需）
+│   ├── 04_db_schema_to_testdata.md # Schema → 测试数据（按需）
+│   ├── 06_e2e_ui_flow.md           # UI E2E（Playwright）（按需）
+│   └── 07_defect_analysis.md       # 缺陷分析 & 回归（按需）
 │
 ├── tests/
-│   ├── conftest.py                 # 全局 fixture：MySQL 连接、HTTP Session
-│   ├── api/
-│   │   └── test_example.py         # API 接口测试示例（用户模块参考模板）
-│   ├── integration/
-│   │   └── test_flow_example.py    # 端到端流程测试示例
-│   └── utils/
-│       └── api_client.py           # 封装 HTTP 请求 + 断言辅助方法
+│   ├── conftest.py                 # 入口，引用 conftest_plugins/ 子模块
+│   ├── conftest_plugins/
+│   │   ├── db.py                   # DB fixtures（MySQL、PolarDB、adam_id）
+│   │   ├── auth.py                 # Auth + Playwright fixtures
+│   │   └── report.py               # pytest-html 报告增强
+│   ├── utils/api_client.py         # HTTP 请求 + 断言封装
+│   ├── helpers/                    # 模块级断言复用
+│   ├── api/                        # API 测试用例
+│   │   ├── _examples/              # 用例模板参考
+│   │   └── basic_info/             # 基本信息管理模块
+│   ├── integration/                # E2E 流程测试
+│   └── pages/                      # Playwright Page Object
 │
 ├── test_data/
-│   ├── baseline.sql                # 基准测试数据（INSERT）
-│   └── cleanup.sql                 # 数据清理（DELETE）
+│   ├── sql/                        # 数据库 baseline / cleanup 脚本
+│   ├── testpoints/                 # 测试点清单（阶段一产物）
+│   └── bug_tracker.md              # 缺陷追踪记录
 │
-├── reports/                        # 测试报告输出目录（HTML/Allure）
+├── reports/                        # 测试报告输出
 ├── .env.example                    # 环境变量模板
 ├── pytest.ini                      # pytest 配置
 └── requirements.txt                # Python 依赖
@@ -43,72 +48,69 @@ ai_test_adm/
 
 ```bash
 pip install -r requirements.txt
+playwright install chromium   # 仅运行 UI E2E 时需要
 ```
 
 ### 2. 配置环境
 
 ```bash
 copy .env.example .env
-# 编辑 .env，填写真实的 BASE_URL、数据库连接、Token 等
+# 编辑 .env，填写真实的 BASE_URL、数据库连接、登录账号等
 ```
 
 ### 3. 运行测试
 
 ```bash
-# 运行全部测试
-pytest tests/ -v
+# API 测试
+pytest tests/api/ -v
 
-# 只运行冒烟测试（P0）
+# 冒烟测试
 pytest tests/ -m smoke -v
 
-# 并行运行（加速）
-pytest tests/ -n auto -v
+# UI E2E
+pytest tests/integration/ -v -m e2e
 
-# 生成 HTML 报告
-pytest tests/ --html=reports/report.html --self-contained-html
+# 并行 + HTML 报告
+pytest tests/ -n auto -v --html=reports/report.html --self-contained-html
 ```
 
 ---
 
-## 五阶段工作流（AI 辅助）
+## 日常使用流程
 
-| 阶段 | 输入 | AI Prompt | 输出 |
-|------|------|-----------|------|
-| 一：测试点提取 | 需求文档 + 代码库 | `prompts/01_req_to_testpoints.md` | 结构化测试点清单 |
-| 二-A：API 用例 | Apifox 接口文档 | `prompts/02_apifox_to_cases.md` | `tests/api/test_*.py` |
-| 二-B：分支用例 | 代码库 | `prompts/03_code_to_cases.md` | 追加至 `tests/api/` |
-| 三：测试数据 | MySQL Schema | `prompts/04_db_schema_to_testdata.md` | `test_data/*.sql` + fixture |
-| 四：断言完善 | 已有用例骨架 | `prompts/05_assert_generation.md` | 完整断言 + 数据库验证 |
-| 五：缺陷分析 | 失败用例 + 代码 | `prompts/06_defect_analysis.md` | 根因报告 + 回归清单 |
-
-### 推荐工作顺序
+### 主路径：一个 Prompt 搞定
 
 ```
-收到需求
-  └→ [阶段一] 提取测试点清单
-       └→ [阶段二-A] Apifox → 批量生成 API 用例骨架
-            └→ [阶段三] 数据库 Schema → 生成测试数据 + fixture
-                 └→ [阶段四] 完善断言 → 可运行
-                      └→ 执行 pytest → 发现失败
-                           └→ [阶段五] AI 分析根因 → 提 Bug
-                                └→ 需求变更 → [阶段五] 回归分析 → 更新用例
+拿到需求 → 粘贴需求 + prompts/main.md → AI 输出测试点清单 + pytest 文件
+         → 保存到 tests/api/[模块]/ → pytest tests/api/[模块]/ -v
+```
+
+### 挂了怎么办
+
+```
+pytest 失败 → 粘贴失败日志 + prompts/07_defect_analysis.md + @ 代码 → AI 定位根因
+```
+
+### 需要测 UI 主路径
+
+```
+从测试点清单圈 P0 浏览器路径 → prompts/06_e2e_ui_flow.md → Playwright E2E 用例
 ```
 
 ---
 
 ## 新增模块测试（标准步骤）
 
-1. 打开 Cursor，@ 需求文档，使用 `prompts/01_req_to_testpoints.md` 生成测试点
-2. 通过 Apifox MCP 或粘贴接口定义，使用 `prompts/02_apifox_to_cases.md` 生成 `tests/api/test_[模块名].py`
-3. 导出 MySQL 建表语句，使用 `prompts/04_db_schema_to_testdata.md` 更新 `test_data/baseline.sql`
-4. 使用 `prompts/05_assert_generation.md` 为用例补全断言
-5. 运行 `pytest tests/api/test_[模块名].py -v` 验证
+1. @ 需求文档，使用 `prompts/main.md` 一键生成测试点 + 用例
+2. 将生成的用例保存到 `tests/api/[模块名]/`
+3. 运行 `pytest tests/api/[模块名]/ -v`
+4. （可选）需要 UI 主路径时，使用 `prompts/06_e2e_ui_flow.md`
 
 ---
 
 ## 注意事项
 
-- `.env` 文件不要提交到 Git（已在 .gitignore 中忽略）
-- 测试数据使用 `test_` 前缀，测试库与生产库严格隔离
-- `conftest.py` 中所有 fixture 使用 `scope="function"`，保证用例间数据独立
+- `.env` 不要提交到 Git（已在 .gitignore 中忽略）
+- 测试库与生产库严格隔离
+- `conftest` 中所有 fixture 使用 `scope="function"`，保证用例间数据独立
 - AI 生成的用例需要人工审核业务逻辑是否准确
