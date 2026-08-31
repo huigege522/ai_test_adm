@@ -12,6 +12,8 @@ test_data/testpoints/
 │   ├── testpoints_基本信息管理_后端分支覆盖对照.md
 │   ├── testpoints_基本信息管理_代码风险对照.md
 │   └── testpoints_基本信息管理_前端代码风险对照.md
+├── cpp_experiment/                          # CPP 实验（A/B 测试）
+│   └── testpoints_CPP实验.md
 └── {模块目录}/                              # 新模块按同样方式扩展
     └── testpoints_{模块显示名}.md
 ```
